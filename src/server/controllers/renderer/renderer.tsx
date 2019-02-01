@@ -18,7 +18,7 @@ import { createClient } from '../../../graphql/client';
 import { renderFullPage } from '../../renderFullPage';
 import { Router } from '../../../client/Router';
 import { rootSaga } from '../../../client/sagas';
-import { configureStore } from '../../../client/store/configureStore';
+import { configureStore, sagaMiddleware } from '../../../client/store/configureStore';
 
 // You need to reboot this server if you change client javascript files.
 // You need to read the manifest in `get` method if you do not want to restart.
@@ -53,7 +53,7 @@ export async function get(req: Request, res: Response) {
   try {
     const [loadableState] = await Promise.all([
       getLoadableState(App), // kick redux-saga and styled-components
-      store.runSaga(rootSaga).done,
+      sagaMiddleware.run(rootSaga).done,
       getDataFromTree(App)
     ]);
 
@@ -69,6 +69,7 @@ export async function get(req: Request, res: Response) {
     const scripts = loadableState.getScriptTag();
     const graphql = JSON.stringify(client.extract());
 
+    console.log(graphql);
     res.send(renderFullPage({ meta, assets, body, style, preloadedState, scripts, graphql }));
   } catch (e) {
     res.status(500).send(e.message);
